@@ -1,35 +1,69 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import Header from './components/Header';
+import AllTasks from './pages/AllTasks';
+import CompletedTasks from './pages/CompletedTasks';
+import './styles/App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  
+  const [todos, setTodos] = useState(() => {
+    const saved = localStorage.getItem('todos');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
+
+  const addTodo = (task) => {
+    const newTodo = { id: Date.now(), task, completed: false };
+    setTodos([...todos, newTodo]);
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter((todo) => todo.id !== id));
+  };
+
+  const toggleComplete = (id) => {
+    setTodos(todos.map((todo) =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const editTodo = (id, newTask) => {
+    setTodos(todos.map((todo) =>
+      todo.id === id ? { ...todo, task: newTask } : todo
+    ));
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div className="container">
+        <Header />
+        <nav className="nav">
+          <Link to="/">All Tasks</Link>
+          <Link to="/completed">Completed</Link>
+        </nav>
+        <Routes>
+          <Route path="/" element={<AllTasks
+            todos={todos}
+            addTodo={addTodo}
+            deleteTodo={deleteTodo}
+            toggleComplete={toggleComplete}
+            editTodo={editTodo}
+          />} />
+          <Route path="/completed" element={<CompletedTasks
+            todos={todos}
+            deleteTodo={deleteTodo}
+            toggleComplete={toggleComplete}
+            editTodo={editTodo}
+          />} />
+        </Routes>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    </Router>
+  );
+};
 
-export default App
+export default App;
